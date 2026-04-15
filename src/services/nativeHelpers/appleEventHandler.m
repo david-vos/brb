@@ -24,6 +24,28 @@ extern void bridgeSendURLToGo(const char* url);
     }
 }
 
+- (void)handleOpenDocuments:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
+    NSAppleEventDescriptor *directObject = [event paramDescriptorForKeyword:keyDirectObject];
+    if (!directObject) return;
+
+    NSInteger count = [directObject numberOfItems];
+    for (NSInteger i = 1; i <= count; i++) {
+        NSAppleEventDescriptor *item = [directObject descriptorAtIndex:i];
+        if (!item) continue;
+        NSURL *fileURL = [NSURL URLWithString:[item stringValue]];
+        if (!fileURL) {
+            // Try as file path
+            fileURL = [NSURL fileURLWithPath:[item stringValue]];
+        }
+        if (fileURL) {
+            const char *urlCStr = [[fileURL absoluteString] UTF8String];
+            if (urlCStr) {
+                bridgeSendURLToGo(urlCStr);
+            }
+        }
+    }
+}
+
 @end
 
 static GetURLHandler *getURLHandler = nil;
@@ -39,6 +61,11 @@ void setupAppleEventHandler() {
                 andSelector:@selector(handleGetURL:withReplyEvent:)
                 forEventClass:kInternetEventClass
                 andEventID:kAEGetURL];
+            [[NSAppleEventManager sharedAppleEventManager]
+                setEventHandler:getURLHandler
+                andSelector:@selector(handleOpenDocuments:withReplyEvent:)
+                forEventClass:kCoreEventClass
+                andEventID:kAEOpenDocuments];
         }
     }
 }

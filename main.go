@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"browserRedirectBar/src"
@@ -25,9 +27,19 @@ func main() {
 		if arg == "" {
 			continue
 		}
-		if strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://") {
+		var urlStr string
+		if strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://") || strings.HasPrefix(arg, "file://") {
+			urlStr = arg
+		} else if strings.HasSuffix(strings.ToLower(arg), ".html") || strings.HasSuffix(strings.ToLower(arg), ".htm") || strings.HasSuffix(strings.ToLower(arg), ".xhtml") {
+			absPath, err := filepath.Abs(arg)
+			if err != nil {
+				continue
+			}
+			urlStr = (&url.URL{Scheme: "file", Path: absPath}).String()
+		}
+		if urlStr != "" {
 			select {
-			case app.URLChan() <- arg:
+			case app.URLChan() <- urlStr:
 			default:
 				// Channel full, drop URL
 			}
