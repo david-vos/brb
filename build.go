@@ -61,6 +61,12 @@ func main() {
 	// Success message
 	fmt.Printf("\nApp bundle created: %s\n\n", appDir)
 
+	// Skip install/register in CI
+	if os.Getenv("CI") != "" {
+		fmt.Println("CI detected — skipping install and registration.")
+		return
+	}
+
 	// Install to ~/Applications
 	installApp()
 

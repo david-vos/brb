@@ -19,11 +19,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Build app bundle
-        run: |
-          go build -o brb.app/Contents/MacOS/brb main.go
-          mkdir -p brb.app/Contents/Resources
-          cp Info.plist brb.app/Contents/
-          cp appIcon.icns brb.app/Contents/Resources/
+        run: go run build.go
 
       - name: Zip app bundle
         run: zip -r brb.app.zip brb.app
