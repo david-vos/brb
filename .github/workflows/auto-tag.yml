@@ -1,0 +1,36 @@
+name: Auto Tag
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: latest
+        run: |
+          tag=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$tag" ]; then
+            echo "version=v1.0.0" >> "$GITHUB_OUTPUT"
+          else
+            # Bump patch version
+            major=$(echo "$tag" | cut -d. -f1)
+            minor=$(echo "$tag" | cut -d. -f2)
+            patch=$(echo "$tag" | cut -d. -f3)
+            patch=$((patch + 1))
+            echo "version=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create tag
+        run: |
+          git tag ${{ steps.latest.outputs.version }}
+          git push origin ${{ steps.latest.outputs.version }}
